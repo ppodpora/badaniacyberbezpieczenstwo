@@ -1,7 +1,7 @@
 import csv
 import time
 import hashlib
-import mysql.connector
+import pymysql
 # Ścieżka do pliku
 file_path = 'prefix.csv'
 country_nr = '48'
@@ -13,13 +13,9 @@ prefixes_length_3 = []
 prefixes_length_4 = []
 prefixes_length_5 = []
 
-#Konfiguracja połączenia z bazą danych
-db_config = {
-    'host': 'localhost',
-    'user': 'twoja_nazwa_uzytkownika',
-    'password': 'twoje_haslo',
-    'database': 'nazwa_bazy_danych'
-}
+# Połączenie z bazą danych
+connection = pymysql.connect(host='localhost', user='root', password='B@daniaCyber', database='badania_cyber')
+cursor = connection.cursor()
 
 # Funkcja zapisująca całą paczkę hashy do pliku
 def write_hashes_to_file(hashes_batch, file_path):
@@ -29,9 +25,9 @@ def write_hashes_to_file(hashes_batch, file_path):
 
 def write_hashes_to_database(hashes_batch, cursor, connection):
     # Wstawianie danych do tabeli
-    insert_query = "INSERT INTO phone_numbers (phone_number, hash) VALUES (%s, %s)"
+    insert_query = "INSERT INTO Info (numer_telefonu, HASH, kraj) VALUES (%s, %s, %s)"
     for number, hash in hashes_batch.items():
-        cursor.execute(insert_query, (hash.key(), hash.value()))
+        cursor.execute(insert_query, (number, hash, 'PL'))
     connection.commit()
     print(f"Zatwierdzono paczkę do {rest} dla prefixu {prefix}")
 
@@ -75,32 +71,20 @@ batch_possible_numbers = []
 # Przechowywanie hashy dla numerów telefonów
 phone_number_hashes = {}
 output_file = 'phone_number_hashes.txt'
-batch_size = 1000
-
+batch_size = 500
 start_time = time.time()
-
-
-# Połączenie z bazą danych
-connection = mysql.connector.connect(**db_config)
-cursor = connection.cursor()
-# connection = 1
-# cursor = 1
-
+print(len(prefixes_length_3))
 # Generowanie numerów dla długości przedrostka równego 3
 for prefix in prefixes_length_3:
-    for i in range(0, 10000, batch_size): # Zakres od 0 do 999999 (6 cyfr)
+    for i in range(0, 1000, batch_size): # Zakres od 0 do 999999 (6 cyfr)
         for rest in range(i, i+batch_size):
             batch_possible_numbers.append(f"{country_nr}{prefix}{rest:06d}")  # Dodaj wypełnienie zerami\
         # Generowanie hashy dla bieżącej paczki
         hashes_batch = generate_hashes(batch_possible_numbers)
-
-        # Zapis całej paczki do tego samego pliku
-        # write_hashes_to_file(hashes_batch, output_file)
-        write_hashes_to_database(hashes_batch, cursor, connection)
+        # write_hashes_to_database(hashes_batch, cursor, connection)
         batch_possible_numbers = []
         hashes_batch = {}
         print(f"Wygenerowana paczka dla i = {i}")
-
 
 # # Generowanie numerów dla długości przedrostka równego 4
 # for prefix in prefixes_length_4:

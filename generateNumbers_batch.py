@@ -25,19 +25,22 @@ def write_hashes_to_file(hashes_batch, file_path):
 
 def write_hashes_to_database(hashes_batch, cursor, connection):
     # Wstawianie danych do tabeli
-    insert_query = "INSERT INTO Info (numer_telefonu, HASH, kraj) VALUES (%s, %s, %s)"
-    for number, hash in hashes_batch.items():
-        cursor.execute(insert_query, (number, hash, 'PL'))
+    insert_query = ("INSERT INTO Info (numer_telefonu, HASH) VALUES (%s, %s)")
+    cursor.executemany(insert_query, hashes_batch)
+
+    # for number, hash in hashes_batch.items():
+    #     cursor.execute(insert_query, (number, hash, 'PL'))
     connection.commit()
     print(f"Zatwierdzono paczkę do {rest} dla prefixu {prefix}")
 
 # Funkcja generująca hashe dla paczki numerów
 def generate_hashes(numbers_batch):
-    hashes = {}
+    hashes = []
     for number in numbers_batch:
         hashed_number = hashlib.sha256(number.encode()).hexdigest()
         # hashes.append(f"{number},{hashed_number}")
-        hashes[number] = hashed_number
+        hashes.append((number, hashed_number))
+    print(hashes)
     return hashes
 
 
@@ -81,9 +84,9 @@ for prefix in prefixes_length_3:
             batch_possible_numbers.append(f"{country_nr}{prefix}{rest:06d}")  # Dodaj wypełnienie zerami\
         # Generowanie hashy dla bieżącej paczki
         hashes_batch = generate_hashes(batch_possible_numbers)
-        # write_hashes_to_database(hashes_batch, cursor, connection)
+        write_hashes_to_database(hashes_batch, cursor, connection)
         batch_possible_numbers = []
-        hashes_batch = {}
+        hashes_batch = []
         print(f"Wygenerowana paczka dla i = {i}")
 
 # # Generowanie numerów dla długości przedrostka równego 4

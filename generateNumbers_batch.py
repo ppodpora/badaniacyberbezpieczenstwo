@@ -32,7 +32,7 @@ def write_hashes_to_database(hashes_batch, cursor, connection):
     insert_query = "INSERT INTO phone_numbers (phone_number, hash) VALUES (%s, %s)"
     for number, hash in hashes_batch.items():
         cursor.execute(insert_query, (hash.key(), hash.value()))
-    # connection.commit()
+    connection.commit()
     print(f"Zatwierdzono paczkę do {rest} dla prefixu {prefix}")
 
 # Funkcja generująca hashe dla paczki numerów

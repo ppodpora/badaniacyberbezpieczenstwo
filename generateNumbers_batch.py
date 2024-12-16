@@ -2,6 +2,7 @@ import csv
 import time
 import hashlib
 import pymysql
+import os
 # Ścieżka do pliku
 file_path = 'prefix.csv'
 country_nr = '48'
@@ -40,7 +41,6 @@ def generate_hashes(numbers_batch):
         hashed_number = hashlib.sha256(number.encode()).hexdigest()
         # hashes.append(f"{number},{hashed_number}")
         hashes.append((number, hashed_number))
-    print(hashes)
     return hashes
 
 
@@ -76,7 +76,17 @@ phone_number_hashes = {}
 output_file = 'phone_number_hashes.txt'
 batch_size = 500
 start_time = time.time()
-print(len(prefixes_length_3))
+
+# # Pobieramy ID procesu SLURM
+# task_id = int(os.environ.get('SLURM_PROCID', 0))  # Domyślnie 0, jeśli brak
+# total_tasks = int(os.environ.get('SLURM_NTASKS', 1))  # Łączna liczba procesów
+#
+# # Określenie przedrostków dla danego procesu
+# num_prefixes = len(prefixes_length_3)
+# prefixes_per_task = num_prefixes // total_tasks
+# start_index = task_id * prefixes_per_task
+# end_index = (task_id + 1) * prefixes_per_task if task_id != total_tasks - 1 else num_prefixes
+
 # Generowanie numerów dla długości przedrostka równego 3
 for prefix in prefixes_length_3:
     for i in range(0, 1000, batch_size): # Zakres od 0 do 999999 (6 cyfr)
@@ -87,7 +97,6 @@ for prefix in prefixes_length_3:
         write_hashes_to_database(hashes_batch, cursor, connection)
         batch_possible_numbers = []
         hashes_batch = []
-        print(f"Wygenerowana paczka dla i = {i}")
 
 # # Generowanie numerów dla długości przedrostka równego 4
 # for prefix in prefixes_length_4:
